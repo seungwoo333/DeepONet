@@ -16,7 +16,7 @@ trunk_size_ary = [1, 100, branch_hidden_size]
 
 model = DeepONet_RNN(branch_in_size, branch_hidden_size, branch_num_layers, trunk_size_ary)
 
-num_epoch = 20
+num_epoch = 1000
 lr = 0.001
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(device)
@@ -60,9 +60,12 @@ def test(branch_input, trunk_input, target):
 if __name__ == "__main__":
     train_loss_ary = []
     test_loss_ary = []
-    num_sequence = 100
+    num_sequence = 300
     train_weights_ary = torch.rand(num_sequence, N)
     dataset = GetTrainDataset(train_weights_ary)
+
+    test_weights = torch.rand(N)
+    branch, trunk, target = GetSuperposition(test_weights)
 
     for epoch in range(num_epoch):
         shuffled_idx = np.random.permutation(num_sequence)
@@ -70,7 +73,7 @@ if __name__ == "__main__":
         for idx in shuffled_idx:
             train_weights = torch.rand(N)
             branch_input, trunk_input, target = dataset[idx]
-            avg_loss_seq = train(AddLinearBias(branch_input.to(device)), trunk_input.to(device), target.to(device))
+            avg_loss_seq = train(branch_input.to(device), trunk_input.to(device), target.to(device))
             train_loss_avg += avg_loss_seq
             #print(f"Loss for {n}th orthogonal basis: {avg_loss_seq:.8f}")
         train_loss_avg /= num_sequence
@@ -79,19 +82,17 @@ if __name__ == "__main__":
         if scheduler:
             scheduler.step()
             
-        test_weights = torch.rand(N)
-        branch, trunk, target = GetSuperposition(test_weights)
-        test_loss = test(AddLinearBias(branch.to(device)), trunk.to(device), target.to(device))
+        test_loss = test(branch.to(device), trunk.to(device), target.to(device))
         test_loss_ary.append(test_loss)
 
         print(f"Epoch {epoch+1} train aveage loss: {train_loss_avg}")
         print(f"test loss by random superposition: {test_loss}")
 
     #torch.save(model.state_dict(), 'DeepONet_RNN_randomfield_state.pth')
-    torch.save(model, './results/DeepONet_RNN_randomfield_test.pth')
+    torch.save(model, './DeepONet/results/DeepONet_RNN_randomfield_test.pth')
 
     import pickle
-    with open('./results/train_loss_log_test.pickle', 'wb') as f:
+    with open('./DeepONet/results/train_loss_log_test.pickle', 'wb') as f:
         pickle.dump(train_loss_ary, f, pickle.HIGHEST_PROTOCOL)
-    with open('./results/test_loss_log_test.pickle', 'wb') as f:
+    with open('./DeepONet/results/test_loss_log_test.pickle', 'wb') as f:
         pickle.dump(test_loss_ary, f, pickle.HIGHEST_PROTOCOL)

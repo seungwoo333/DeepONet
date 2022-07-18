@@ -6,7 +6,7 @@ import random
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 x = np.linspace(0, 1, 51)
-t = np.linspace(0, 1, 1001)
+t = np.linspace(0, 10, 1001)
 num_sensor = len(x)
 k = len(t)
 
@@ -18,7 +18,7 @@ def get_functional(functional, n):
     func = lambda x, t: functional(n, x, t)
     return func
 
-N = 10
+N = 3
 functional_ary_u = [get_functional(u, n) for n in range(1, N+1)]
 functional_ary_d2udx2 = [get_functional(d2udx2, n) for n in range(1, N+1)]
 

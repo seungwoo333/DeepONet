@@ -31,7 +31,7 @@ weights = torch.rand(N)
 weights /= torch.sum(weights)
 branch, trunk, label = tuple(map(lambda tensor: tensor.to(device), GetSuperposition(weights)))
 
-T_init = torch.unsqueeze(AddLinearBias(branch)[0], dim=0)
+T_init = torch.unsqueeze(branch[0], dim=0)
 nodes = torch.unsqueeze(trunk[0], dim=0)
 dt = t[1] - t[0]
 
@@ -43,7 +43,7 @@ class Solver:
         self.num_nodes = nodes.size(1)
         
     def step(self):
-        dT = self.model(T_init, nodes)
+        dT = self.model(torch.unsqueeze(self.T[-1], dim=0), self.nodes)
         T_next = self.T[-1][0] + alpha * dt * (torch.squeeze(dT))
         self.T = torch.cat([self.T, torch.unsqueeze(T_next.repeat(self.num_nodes, 1), dim=0)], dim=0)
     
